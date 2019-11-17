@@ -3,6 +3,15 @@ package com.ex.demo.remoting;
 import java.io.Serializable;
 import java.util.Arrays;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
 public class RpcRequest implements Serializable {
 
 	private static final long serialVersionUID = 5115683033788294026L;

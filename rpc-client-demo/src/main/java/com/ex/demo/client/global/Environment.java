@@ -1,14 +1,11 @@
 package com.ex.demo.client.global;
 
-import com.ex.demo.client.handler.ServiceConsumerHandler;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.SynchronousQueue;
 
 public class Environment {
 
-	private static class ServiceConsumerHandlerHolder {
-		private static ServiceConsumerHandler serviceConsumerHandler = new ServiceConsumerHandler();
-	}
+	public static ConcurrentHashMap<String, SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
 	
-	public static ServiceConsumerHandler getServiceConsumerHandler() {
-		return ServiceConsumerHandlerHolder.serviceConsumerHandler;
-	}
+	public static String host;
 }

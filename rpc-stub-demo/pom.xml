@@ -3,7 +3,6 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>rpc-stub-demo</artifactId>
-	<version>${child.module.version}</version>
 	<name>rpc-stub-demo</name>
 	<description>RPC Stub Demo Project</description>
 	<packaging>jar</packaging>
@@ -11,7 +10,7 @@
 	<parent>
 		<groupId>com.ex</groupId>
 		<artifactId>rpc-demo</artifactId>
-		<version>0.0.1-SNAPSHOT</version>
+		<version>${project.version}</version>
 	</parent>
 	
 	<properties>

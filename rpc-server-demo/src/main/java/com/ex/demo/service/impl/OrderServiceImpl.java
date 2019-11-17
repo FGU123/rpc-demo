@@ -7,6 +7,7 @@ import com.ex.demo.domain.Order;
 import com.ex.demo.service.stub.OrderService;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
 import lombok.extern.slf4j.Slf4j;
 
@@ -16,7 +17,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public List<Order> getOrders() {
-//		ThreadUtil.safeSleep(10000);
+		ThreadUtil.safeSleep(10000); // mock long time operations
 		return mockDatas();
 	}
 
