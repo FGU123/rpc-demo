@@ -4,9 +4,8 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
-import java.util.concurrent.SynchronousQueue;
 
-import com.ex.demo.client.ServiceClient;
+import com.ex.demo.client.RpcChannelPool;
 import com.ex.demo.client.global.Environment;
 import com.ex.demo.remoting.RpcRequest;
 
@@ -45,7 +44,7 @@ public class SeviceConsumerProxy implements InvocationHandler {
 		request.setMethodName(method.getName());
 		request.setParameterTypes(method.getParameterTypes());
 		request.setArgs(args);
-		FixedChannelPool pool = ServiceClient.poolMap.get(Environment.host);
+		FixedChannelPool pool = RpcChannelPool.getChannelPoolMap().get(Environment.getHost());
 		Future<Channel> future = pool.acquire();
 		future.addListener(new FutureListener<Channel>() {
 			@Override
@@ -58,7 +57,6 @@ public class SeviceConsumerProxy implements InvocationHandler {
 		});
 
 		// 获取服务端返回的数据
-		Environment.queueMap.putIfAbsent(request.getRequestId(), new SynchronousQueue<Object>());
-		return Environment.queueMap.get(request.getRequestId()).take();
+		return Environment.getResultBlockingQueue(request.getRequestId()).take();
 	}
 }

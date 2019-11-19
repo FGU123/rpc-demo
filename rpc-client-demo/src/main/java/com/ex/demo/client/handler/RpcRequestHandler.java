@@ -1,8 +1,6 @@
 package com.ex.demo.client.handler;
 
-import java.util.concurrent.SynchronousQueue;
-
-import com.ex.demo.client.ServiceClient;
+import com.ex.demo.client.RpcChannelPool;
 import com.ex.demo.client.global.Environment;
 import com.ex.demo.remoting.RpcResponse;
 
@@ -13,7 +11,7 @@ import io.netty.channel.pool.FixedChannelPool;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class RPCRequestHandler extends ChannelInboundHandlerAdapter  {
+public class RpcRequestHandler extends ChannelInboundHandlerAdapter  {
 
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
@@ -22,14 +20,14 @@ public class RPCRequestHandler extends ChannelInboundHandlerAdapter  {
      
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        RpcResponse response= (RpcResponse) msg;
         
-        Environment.queueMap.putIfAbsent(response.getRequestId(), new SynchronousQueue<Object>());
-        Environment.queueMap.get(response.getRequestId()).put(response.getResult());
+    	RpcResponse response= (RpcResponse) msg;
         
-        FixedChannelPool pool = ServiceClient.poolMap.get(Environment.host);
+        Environment.getResultBlockingQueue(response.getRequestId()).put(response.getResult());
+        
+        FixedChannelPool pool = RpcChannelPool.getChannelPoolMap().get(Environment.getHost());
         Channel channel = ctx.channel();
-        log.info("released channel: "+channel.id());
+        log.info("released channel [id={}] back to pool", channel.id());
         pool.release(channel);
     }
     

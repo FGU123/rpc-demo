@@ -5,7 +5,28 @@ import java.util.concurrent.SynchronousQueue;
 
 public class Environment {
 
-	public static ConcurrentHashMap<String, SynchronousQueue<Object>> queueMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, SynchronousQueue<Object>> resultBlockingMap = new ConcurrentHashMap<>();
 	
-	public static String host;
+	public static SynchronousQueue<Object> getResultBlockingQueue(String key) {
+		resultBlockingMap.putIfAbsent(key, new SynchronousQueue<Object>());
+		return resultBlockingMap.get(key);
+	}
+	
+	public static ConcurrentHashMap<String, SynchronousQueue<Object>> getResultBlockingMap() {
+		return resultBlockingMap;
+	}
+
+	public static void setRequestBlockingMap(ConcurrentHashMap<String, SynchronousQueue<Object>> requestBlockingMap) {
+		Environment.resultBlockingMap = requestBlockingMap;
+	}
+	
+	private static String host;
+
+	public static String getHost() {
+		return host;
+	}
+
+	public static void setHost(String host) {
+		Environment.host = host;
+	}
 }
