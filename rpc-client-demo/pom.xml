@@ -74,12 +74,6 @@
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
 		</dependency>
-		
-		<dependency>
-		    <groupId>com.github.sarveswaran-m</groupId>
-		    <artifactId>util.concurrent.blockingMap</artifactId>
-		    <version>0.91</version>
-		</dependency>
 	</dependencies>
 
 	<build>

@@ -7,7 +7,7 @@ import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.FixedChannelPool;
 
 /**
- * A context of rpc client holding static variables
+ * context of a single rpc client
  */
 public class Environment {
 
