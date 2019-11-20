@@ -11,43 +11,49 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.ChannelPoolHandler;
-import io.netty.channel.pool.ChannelPoolMap;
 import io.netty.channel.pool.FixedChannelPool;
 import lombok.extern.slf4j.Slf4j;
 
+/** 
+ * TODO a better choice could be used instead of fixedChannelPool because of these points:
+ *  1. Unable to dynamically control the number of connections
+ *  2. Unable to evict any specified channel
+ *  3. There's no health check mechanism
+ * 
+ * This better choice could be like this:
+ *  our own implement of ChannelPool to solve those problems above  
+ */
 @Slf4j
-public class RpcChannelPool<K> extends AbstractChannelPoolMap<K, FixedChannelPool> {
+public class RpcChannelPool extends AbstractChannelPoolMap<Object, FixedChannelPool> {
 
-	private static Bootstrap bootstrap;
+	private Bootstrap bootstrap;
 
-	private int poolSize = 50;
+	private int poolSize;
+	
+	private static final int DEFAULT_POOL_SIZE = 50;
 
-	private RpcChannelPool() {
-		
+	private RpcChannelPool(Bootstrap bootstrap, int poolSize) {
+		this.bootstrap = bootstrap;
+		this.poolSize = poolSize;
 	}
 	
-	private static class ChannelPoolMapHolder {
-		
-		/** 
-		 * TODO a better choice could be used instead of fixedChannelPool because of these points:
-		 *  1. Unable to dynamically control the number of connections
-		 *  2. Unable to evict any specified channel
-		 *  3. There's no health check mechanism
-		 * 
-		 * This better choice could be like this:
-		 *  a self implements of ChannelPool to solve those problems above  
-		 */
-		private static ChannelPoolMap<String, FixedChannelPool> channelPoolMap = new RpcChannelPool<String>();
-	}
+	private volatile static RpcChannelPool pool;
 	
-	public static void initChannelPoolMap(Bootstrap bootstrap) {
-		RpcChannelPool.bootstrap = bootstrap;
-	}
-	
-	public static ChannelPoolMap<String, FixedChannelPool> getChannelPoolMap() {
-		return ChannelPoolMapHolder.channelPoolMap;
-	}
+	public static RpcChannelPool getChannelPoolMap(Bootstrap bootstrap, int poolSize) {
+        if (pool == null) {   
+            synchronized (RpcChannelPool.class) {
+                if (pool == null) {   
+                	pool = new RpcChannelPool(bootstrap, poolSize);
+                }
+            }
+        }
+        return pool;
+    }
 
+	public static RpcChannelPool getChannelPoolMap(Bootstrap bootstrap) {
+		return getChannelPoolMap(bootstrap, DEFAULT_POOL_SIZE);
+	}
+	
 	@Override
 	protected FixedChannelPool newPool(Object key) {
 		ChannelPoolHandler handler = new ChannelPoolHandler() {

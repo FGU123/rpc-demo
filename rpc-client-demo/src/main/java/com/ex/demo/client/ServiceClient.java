@@ -22,6 +22,9 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 
 	@Value("${rpc.server.port:8888}")
 	private int port;
+	
+	@Value("${rpc.client.channel.pool.size:50}")
+	private int channelPoolSize;
 
 	public Bootstrap startClient() {
 		Bootstrap bootstrap = new Bootstrap();
@@ -30,7 +33,7 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 			bootstrap.group(worker);
 			bootstrap.channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true);
 			bootstrap.remoteAddress(host, port);
-			RpcChannelPool.initChannelPoolMap(bootstrap);
+			Environment.registerChannelPoolMap(RpcChannelPool.getChannelPoolMap(bootstrap, channelPoolSize));
 			
 			log.info("connected to rpc server /{}:{}", host, port);
 			Environment.setHost(host);

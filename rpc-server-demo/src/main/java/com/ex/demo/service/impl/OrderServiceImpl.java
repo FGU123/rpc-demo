@@ -17,7 +17,7 @@ public class OrderServiceImpl implements OrderService {
 
 	@Override
 	public List<Order> getOrders() {
-		ThreadUtil.safeSleep(10000); // mock long time operations
+		ThreadUtil.safeSleep(5000); // mock long time operations
 		return mockDatas();
 	}
 

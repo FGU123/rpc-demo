@@ -5,7 +5,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.UUID;
 
-import com.ex.demo.client.RpcChannelPool;
 import com.ex.demo.client.global.Environment;
 import com.ex.demo.remoting.RpcRequest;
 
@@ -44,7 +43,7 @@ public class SeviceConsumerProxy implements InvocationHandler {
 		request.setMethodName(method.getName());
 		request.setParameterTypes(method.getParameterTypes());
 		request.setArgs(args);
-		FixedChannelPool pool = RpcChannelPool.getChannelPoolMap().get(Environment.getHost());
+		FixedChannelPool pool = Environment.getRegisteredChannelPoolMap().get(Environment.getHost());
 		Future<Channel> future = pool.acquire();
 		future.addListener(new FutureListener<Channel>() {
 			@Override

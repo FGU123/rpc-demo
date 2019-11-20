@@ -1,6 +1,5 @@
 package com.ex.demo.client.handler;
 
-import com.ex.demo.client.RpcChannelPool;
 import com.ex.demo.client.global.Environment;
 import com.ex.demo.remoting.RpcResponse;
 
@@ -25,7 +24,7 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter  {
         
         Environment.getResultBlockingQueue(response.getRequestId()).put(response.getResult());
         
-        FixedChannelPool pool = RpcChannelPool.getChannelPoolMap().get(Environment.getHost());
+        FixedChannelPool pool = Environment.getRegisteredChannelPoolMap().get(Environment.getHost());
         Channel channel = ctx.channel();
         log.info("released channel [id={}] back to pool", channel.id());
         pool.release(channel);

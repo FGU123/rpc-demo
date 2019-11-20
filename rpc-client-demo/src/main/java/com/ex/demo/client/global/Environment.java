@@ -3,6 +3,12 @@ package com.ex.demo.client.global;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
 
+import io.netty.channel.pool.AbstractChannelPoolMap;
+import io.netty.channel.pool.FixedChannelPool;
+
+/**
+ * A context of rpc client holding static variables
+ */
 public class Environment {
 
 	private static ConcurrentHashMap<String, SynchronousQueue<Object>> resultBlockingMap = new ConcurrentHashMap<>();
@@ -28,5 +34,15 @@ public class Environment {
 
 	public static void setHost(String host) {
 		Environment.host = host;
+	}
+
+	private static AbstractChannelPoolMap<Object, FixedChannelPool> channelPoolMap;
+	
+	public static AbstractChannelPoolMap<Object, FixedChannelPool> getRegisteredChannelPoolMap() {
+		return channelPoolMap;
+	}
+	
+	public static void registerChannelPoolMap(AbstractChannelPoolMap<Object, FixedChannelPool> channelPool) {
+		Environment.channelPoolMap = channelPool;
 	}
 }
