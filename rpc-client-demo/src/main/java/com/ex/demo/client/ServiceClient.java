@@ -6,17 +6,10 @@ import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.stereotype.Component;
 
 import com.ex.demo.client.global.Environment;
-import com.ex.demo.codec.RPCDecoder;
-import com.ex.demo.codec.RPCEncoder;
-import com.ex.demo.remoting.RpcRequest;
-import com.ex.demo.remoting.RpcResponse;
 
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
-import io.netty.channel.ChannelPipeline;
 import io.netty.channel.nio.NioEventLoopGroup;
-import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +22,9 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 
 	@Value("${rpc.server.port:8888}")
 	private int port;
+	
+	@Value("${rpc.client.channel.pool.size:50}")
+	private int channelPoolSize;
 
 	public Bootstrap startClient() {
 		Bootstrap bootstrap = new Bootstrap();
@@ -36,20 +32,11 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 		try {
 			bootstrap.group(worker);
 			bootstrap.channel(NioSocketChannel.class).option(ChannelOption.TCP_NODELAY, true);
-			bootstrap.handler(new ChannelInitializer<SocketChannel>() {
-				@Override
-				protected void initChannel(SocketChannel ch) throws Exception {
-					ChannelPipeline p = ch.pipeline();
-					p.addLast(new RPCEncoder(RpcRequest.class)); // request encode
-					p.addLast(new RPCDecoder(RpcResponse.class)); // response decode
-					// considering multiple request concurrency, single channelPipeline may be stuck
-					// TODO probably needs multiple channelPipelines
-					p.addLast(Environment.getServiceConsumerHandler()); 
-				}
-			});
+			bootstrap.remoteAddress(host, port);
+			Environment.registerChannelPoolMap(RpcChannelPool.getChannelPoolMap(bootstrap, channelPoolSize));
 			
-			bootstrap.connect(host, port).sync();
 			log.info("connected to rpc server /{}:{}", host, port);
+			Environment.setHost(host);
 		} catch (Exception e) {
 			log.error("connect to rpc server /{}:{}, error ", host, port, e);
 		}
