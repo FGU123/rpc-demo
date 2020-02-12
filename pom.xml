@@ -22,6 +22,7 @@
 		<module>rpc-stub-demo</module>
 		<module>rpc-server-demo</module>
 		<module>rpc-client-demo</module>
+		<module>webapp-client-demo</module>
 	</modules>
 
 	<dependencyManagement>

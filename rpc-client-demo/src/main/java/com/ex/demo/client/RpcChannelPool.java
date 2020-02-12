@@ -20,7 +20,7 @@ import lombok.extern.slf4j.Slf4j;
  *  2. Unable to evict any specified channel
  *  3. There's no health check mechanism
  * 
- * This better choice could be like this:
+ * A better choice could be like this:
  *  our own implement of ChannelPool to solve those problems above  
  */
 @Slf4j
@@ -37,7 +37,7 @@ public class RpcChannelPool extends AbstractChannelPoolMap<Object, FixedChannelP
 		this.poolSize = poolSize;
 	}
 	
-	private volatile static RpcChannelPool pool;
+	private static volatile RpcChannelPool pool;
 	
 	public static RpcChannelPool getChannelPoolMap(Bootstrap bootstrap, int poolSize) {
         if (pool == null) {   

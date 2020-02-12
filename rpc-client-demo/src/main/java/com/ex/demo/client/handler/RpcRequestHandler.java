@@ -26,8 +26,8 @@ public class RpcRequestHandler extends ChannelInboundHandlerAdapter  {
         
         FixedChannelPool pool = Environment.getRegisteredChannelPoolMap().get(Environment.getHost());
         Channel channel = ctx.channel();
-        log.info("released channel [id={}] back to pool", channel.id());
         pool.release(channel);
+        log.info("released channel [id={}] back to the pool", channel.id());
     }
     
 }
