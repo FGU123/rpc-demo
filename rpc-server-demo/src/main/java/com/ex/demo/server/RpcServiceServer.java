@@ -35,10 +35,10 @@ public class RpcServiceServer {
 		this.port = port;
 	}
 
-	NioEventLoopGroup boss = new NioEventLoopGroup();
-	NioEventLoopGroup worker = new NioEventLoopGroup();
-	ServerBootstrap bootstrap = new ServerBootstrap();
-	Channel channel;
+	private NioEventLoopGroup boss = new NioEventLoopGroup();
+    private NioEventLoopGroup worker = new NioEventLoopGroup();
+    private ServerBootstrap bootstrap = new ServerBootstrap();
+    private Channel channel;
 
 	public void run(Map<String, Object> serviceBeans) {
 		try {
@@ -61,9 +61,14 @@ public class RpcServiceServer {
 		} catch (Exception e) {
 			log.error("rpc server running on /{}:{}, ", host, port, e);
 		} finally {
-			worker.shutdownGracefully();
-			boss.shutdownGracefully();
+			shutdown();
 		}
+	}
+
+	public void shutdown() {
+		log.info("process of rpc server on /{}:{} exits", host, port);
+		worker.shutdownGracefully();
+		boss.shutdownGracefully();
 	}
 
 	public void run() {
