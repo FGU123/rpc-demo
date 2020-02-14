@@ -25,7 +25,10 @@ public class ServerBoot implements ApplicationListener<ApplicationContextEvent> 
 
 	@Value("${rpc.port:8888}")
 	private int port;
-	
+
+	@Value("${rpc.server.service.process.timeout:5000}")
+	private int serviceProcessTimeout;
+
 	private volatile boolean active = false;
 	
 	private RpcServiceServer server;
@@ -46,6 +49,7 @@ public class ServerBoot implements ApplicationListener<ApplicationContextEvent> 
 			new Thread(() -> server.run(map)).start();
 		}
 		active = true;
+		Environment.setServiceProcessTimeout(serviceProcessTimeout);
 	}
 
 	@Override

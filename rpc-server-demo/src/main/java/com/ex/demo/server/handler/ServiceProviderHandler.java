@@ -1,25 +1,26 @@
 package com.ex.demo.server.handler;
 
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.map.MapUtil;
+import com.ex.demo.remoting.RpcRequest;
+import com.ex.demo.remoting.RpcResponse;
+import com.ex.demo.server.global.Environment;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.reflect.FastClass;
+import org.springframework.cglib.reflect.FastMethod;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.springframework.cglib.reflect.FastClass;
-import org.springframework.cglib.reflect.FastMethod;
-
-import com.ex.demo.remoting.RpcRequest;
-import com.ex.demo.remoting.RpcResponse;
-
-import cn.hutool.core.date.StopWatch;
-import cn.hutool.core.map.MapUtil;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A service-provider that handles receiving msg from client and 
@@ -30,9 +31,9 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 	private static final Map<String, Object> SERVICE_BEANS = new HashMap<String, Object>();
 
-	private ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	private ExecutorService execService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	
-	private CompletionService<RpcResponse> completionService = new ExecutorCompletionService<RpcResponse>(es);
+	private CompletionService<RpcResponse> completionService = new ExecutorCompletionService<RpcResponse>(execService);
 	
 	/**
 	 * if need to boot service provider without spring context, 
@@ -57,17 +58,22 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
      * besides write back handle result if needed.
      */
 	@Override
-	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) {
 		log.info("{}, receive msg from client: {}", this, msg);
 
 		RpcRequest request = (RpcRequest) msg;
-		log.info("{} handle {} start", Thread.currentThread(), request.getRequestId());
+		log.info("handle request [id={}] start", request.getRequestId());
 		StopWatch stopWatch = new StopWatch();
 		stopWatch.start();
 //		RpcResponse result = handle(request);
-		RpcResponse response = (RpcResponse) completionService.submit(()->handle(request)).get();
+		RpcResponse response = RpcResponse.builder().requestId(request.getRequestId()).responseId(UUID.randomUUID().toString()).build();
+		try {
+			response = completionService.submit(()->handle(request)).get(Environment.getServiceProcessTimeout(), Environment.getServiceProcessTimeunit());
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			log.error("process request [id={}] error ", request.getRequestId(), e);
+		}
 		stopWatch.stop();
-		log.info("{} handle {} end, consumes {}ms", Thread.currentThread(), request.getRequestId(), stopWatch.getTotalTimeMillis());
+		log.info("process request [id={}] end, consumes {}ms", request.getRequestId(), stopWatch.getTotalTimeMillis());
 
 		ctx.writeAndFlush(response);
 		log.info("send msg back to client: {}", response);
