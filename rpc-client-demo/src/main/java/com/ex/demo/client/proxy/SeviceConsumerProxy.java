@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import com.ex.demo.client.global.Environment;
 import com.ex.demo.remoting.RpcRequest;
+import com.ex.demo.remoting.RpcResponse;
 
 import io.netty.channel.Channel;
 import io.netty.channel.pool.FixedChannelPool;
@@ -36,16 +37,19 @@ public class SeviceConsumerProxy implements InvocationHandler {
 	}
 
 	@Override
-	public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-		RpcRequest request = new RpcRequest(); // 创建并初始化 RPC 请求
+	public Object invoke(Object proxy, Method method, Object[] args) throws InterruptedException {
+		RpcRequest request = new RpcRequest(); // create and initialize RPC request
 		request.setRequestId(UUID.randomUUID().toString());
 		request.setClassName(method.getDeclaringClass().getName());
 		request.setMethodName(method.getName());
 		request.setParameterTypes(method.getParameterTypes());
 		request.setArgs(args);
+		request.setReturnType(method.getReturnType());
+		
 		FixedChannelPool pool = Environment.getRegisteredChannelPoolMap().get(Environment.getHost());
 		Future<Channel> future = pool.acquire();
 		future.addListener(new FutureListener<Channel>() {
+			
 			@Override
 			public void operationComplete(Future<Channel> future) throws Exception {
 				Channel channel = future.getNow();
@@ -55,7 +59,9 @@ public class SeviceConsumerProxy implements InvocationHandler {
 			}
 		});
 
-		// 获取服务端返回的数据
-		return Environment.getResultBlockingQueue(request.getRequestId()).take();
+		// get response data from server
+		RpcResponse response = Environment.getResponseBlockingQueue(request.getRequestId()).take();
+		log.info("get response data [{}] from remote server", response);
+		return response.getResult();
 	}
 }

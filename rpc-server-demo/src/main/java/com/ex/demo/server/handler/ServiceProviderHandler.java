@@ -15,6 +15,7 @@ import org.springframework.cglib.reflect.FastMethod;
 import com.ex.demo.remoting.RpcRequest;
 import com.ex.demo.remoting.RpcResponse;
 
+import cn.hutool.core.date.StopWatch;
 import cn.hutool.core.map.MapUtil;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
@@ -31,7 +32,7 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 	private ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	
-	private CompletionService<Object> completionService = new ExecutorCompletionService<Object>(es);
+	private CompletionService<RpcResponse> completionService = new ExecutorCompletionService<RpcResponse>(es);
 	
 	/**
 	 * if need to boot service provider without spring context, 
@@ -61,21 +62,18 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 		RpcRequest request = (RpcRequest) msg;
 		log.info("{} handle {} start", Thread.currentThread(), request.getRequestId());
-		long start = System.currentTimeMillis();
-//		Object result = handle(request);
-		Object result = completionService.submit(()->handle(request)).get();
-		log.info("{} handle {} end, consumes {}ms", Thread.currentThread(), request.getRequestId(), (System.currentTimeMillis()-start));
-
-		RpcResponse response = new RpcResponse();
-		response.setRequestId(request.getRequestId());
-		response.setResult(result);
-		response.setResponseId(UUID.randomUUID().toString());
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+//		RpcResponse result = handle(request);
+		RpcResponse response = (RpcResponse) completionService.submit(()->handle(request)).get();
+		stopWatch.stop();
+		log.info("{} handle {} end, consumes {}ms", Thread.currentThread(), request.getRequestId(), stopWatch.getTotalTimeMillis());
 
 		ctx.writeAndFlush(response);
 		log.info("send msg back to client: {}", response);
 	}
 
-	public Object handle(RpcRequest request) {
+	public RpcResponse handle(RpcRequest request) {
 		String className = request.getClassName();
 		Object object = SERVICE_BEANS.get(className);
 		Class<?>[] parameterTypes = request.getParameterTypes();
@@ -86,13 +84,20 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 		FastClass fastClass = FastClass.create(targetClass);
 		FastMethod method = fastClass.getMethod(methodName, parameterTypes);
-		Object invoke = null;
+		Object result = null;
 		try {
-			invoke = method.invoke(object, args);
+			result = method.invoke(object, args);
 		} catch (InvocationTargetException e) {
 			log.error("invoke servie method error ", e);
 		}
-		return invoke;
+		
+		RpcResponse response = new RpcResponse();
+		response.setRequestId(request.getRequestId());
+		response.setResponseId(UUID.randomUUID().toString());
+		response.setReturnType(method.getReturnType());
+		response.setResult(result);
+		
+		return response;
 	}
 	
 }

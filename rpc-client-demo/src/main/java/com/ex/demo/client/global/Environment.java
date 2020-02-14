@@ -3,6 +3,10 @@ package com.ex.demo.client.global;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.SynchronousQueue;
 
+import com.ex.demo.remoting.RpcResponse;
+
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelId;
 import io.netty.channel.pool.AbstractChannelPoolMap;
 import io.netty.channel.pool.FixedChannelPool;
 
@@ -11,19 +15,40 @@ import io.netty.channel.pool.FixedChannelPool;
  */
 public class Environment {
 
-	private static ConcurrentHashMap<String, SynchronousQueue<Object>> resultBlockingMap = new ConcurrentHashMap<>();
+	private static ConcurrentHashMap<String, SynchronousQueue<RpcResponse>> responseBlockingMap = new ConcurrentHashMap<>();
 	
-	public static SynchronousQueue<Object> getResultBlockingQueue(String key) {
-		resultBlockingMap.putIfAbsent(key, new SynchronousQueue<Object>());
-		return resultBlockingMap.get(key);
+	public static SynchronousQueue<RpcResponse> getResponseBlockingQueue(String key) {
+		responseBlockingMap.putIfAbsent(key, new SynchronousQueue<RpcResponse>());
+		return responseBlockingMap.get(key);
 	}
 	
-	public static ConcurrentHashMap<String, SynchronousQueue<Object>> getResultBlockingMap() {
-		return resultBlockingMap;
+	public static ConcurrentHashMap<String, SynchronousQueue<RpcResponse>> getResponseBlockingMap() {
+		return responseBlockingMap;
 	}
 
-	public static void setRequestBlockingMap(ConcurrentHashMap<String, SynchronousQueue<Object>> requestBlockingMap) {
-		Environment.resultBlockingMap = requestBlockingMap;
+	/**
+	 * providing a method to specify a ResponseBlockingMap 
+	 */
+	public static void setResponseBlockingMap(ConcurrentHashMap<String, SynchronousQueue<RpcResponse>> responseBlockingMap) {
+		Environment.responseBlockingMap = responseBlockingMap;
+	}
+	
+	private static ConcurrentHashMap<ChannelId, Channel> activeChannelMap = new ConcurrentHashMap<>();
+	
+	public static Channel getActiveChannel(ChannelId channelId) {
+		return activeChannelMap.get(channelId);
+	}
+	
+	public static ConcurrentHashMap<ChannelId, Channel> getActiveChannelMap() {
+		return activeChannelMap;
+	}
+	
+	public static void addActiveChannel(Channel channel) {
+		activeChannelMap.put(channel.id(), channel);
+	}
+	
+	public static void removeActiveChannel(ChannelId channelId) {
+		activeChannelMap.remove(channelId);
 	}
 	
 	private static String host;

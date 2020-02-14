@@ -1,5 +1,6 @@
 package com.ex.demo.client;
 
+import com.ex.demo.client.global.Environment;
 import com.ex.demo.client.handler.RpcRequestHandler;
 import com.ex.demo.codec.RPCDecoder;
 import com.ex.demo.codec.RPCEncoder;
@@ -15,13 +16,13 @@ import io.netty.channel.pool.FixedChannelPool;
 import lombok.extern.slf4j.Slf4j;
 
 /** 
- * TODO a better choice could be used instead of fixedChannelPool because of these points:
- *  1. Unable to dynamically control the number of connections
- *  2. Unable to evict any specified channel
- *  3. There's no health check mechanism
- * 
- * A better choice could be like this:
- *  our own implement of ChannelPool to solve those problems above  
+ * TODO a better choice could be used instead of fixedChannelPool because of these points: </br>
+ *  1. Unable to dynamically control the number of connections (Problem unsolved)</br>
+ *  2. Unable to evict any specified channel (Problem solved, {@link com.ex.demo.client.global.Environment#activeChannelMap}) </br>
+ *  3. There's no health check mechanism (Problem non-exists, Netty self-implements) </br>
+ * </br>
+ * A better choice could be like this: </br>
+ *  our own implement of ChannelPool to solve problem(s) above </br> 
  */
 @Slf4j
 public class RpcChannelPool extends AbstractChannelPoolMap<Object, FixedChannelPool> {
@@ -50,22 +51,28 @@ public class RpcChannelPool extends AbstractChannelPoolMap<Object, FixedChannelP
         return pool;
     }
 
+	/**
+	 * providing another method for default pool size 
+	 */
 	public static RpcChannelPool getChannelPoolMap(Bootstrap bootstrap) {
 		return getChannelPoolMap(bootstrap, DEFAULT_POOL_SIZE);
 	}
 	
 	@Override
 	protected FixedChannelPool newPool(Object key) {
+		
 		ChannelPoolHandler handler = new ChannelPoolHandler() {
 
 			@Override
-			public void channelReleased(Channel ch) throws Exception {
-				log.info("channel [id={}] released", ch.id());
+			public void channelReleased(Channel ch) throws Exception { // callback on released
+				log.info("channel [id={}] released back to the pool", ch.id());
+				Environment.removeActiveChannel(ch.id());
 			}
 
 			@Override
-			public void channelAcquired(Channel ch) throws Exception {
-				log.info("channel [id={}] acquired", ch.id());
+			public void channelAcquired(Channel ch) throws Exception { // callback on acquired
+		        log.info("channel [id={}] acquired", ch.id());
+		        Environment.addActiveChannel(ch);
 			}
 
 			@Override

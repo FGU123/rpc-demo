@@ -1,10 +1,11 @@
 package com.ex.demo.controller;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,9 +31,10 @@ public class OrderAction {
 		return ResponseEntity.ok(orders);
 	}
 	
-	@PutMapping( "/order" )
+//	@PutMapping( "/order" )
+	@RequestMapping( "/order/update" ) // for easy tests
 	public Object updatePerson(@RequestParam( "id" ) Long id) {
 		orderService.updateOrder(id);
-		return ResponseEntity.ok("updated");
+		return ResponseEntity.ok( "[" + LocalDateTime.now() + "] updated");
 	}
 }
