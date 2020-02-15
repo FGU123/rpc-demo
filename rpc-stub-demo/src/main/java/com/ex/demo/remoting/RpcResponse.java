@@ -14,10 +14,12 @@ import lombok.NoArgsConstructor;
 public class RpcResponse implements Serializable {
 
 	private static final long serialVersionUID = 2493857761156142884L;
-
+	
 	private String requestId;
 
 	private Object result;
 
 	private String responseId;
+	
+	private Class<?> returnType;
 }

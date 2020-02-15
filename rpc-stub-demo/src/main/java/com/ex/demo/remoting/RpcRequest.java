@@ -25,6 +25,8 @@ public class RpcRequest implements Serializable {
 	private Object[] args;
 
 	private String requestId;
+	
+	private Class<?> returnType;
 
 	public String getClassName() {
 		return className;
@@ -70,6 +72,8 @@ public class RpcRequest implements Serializable {
 	public String toString() {
 		return "RpcRequest{" + "className='" + className + '\'' + ", methodName='" + methodName + '\''
 				+ ", parameterTypes=" + Arrays.toString(parameterTypes) + ", args=" + Arrays.toString(args)
-				+ ", requestId='" + requestId + '\'' + '}';
+				+ ", returnType='" + returnType + '\''
+				+ ", requestId='" + requestId + '\'' 
+				+ "}";
 	}
 }

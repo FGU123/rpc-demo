@@ -25,6 +25,9 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 	
 	@Value("${rpc.client.channel.pool.size:50}")
 	private int channelPoolSize;
+	
+	@Value("${rpc.client.request.timeout:5000}")
+	private int requestTimeout;
 
 	public Bootstrap startClient() {
 		Bootstrap bootstrap = new Bootstrap();
@@ -37,6 +40,7 @@ public class ServiceClient implements ApplicationListener<ContextRefreshedEvent>
 			
 			log.info("connected to rpc server /{}:{}", host, port);
 			Environment.setHost(host);
+			Environment.setRequestTimeout(requestTimeout);
 		} catch (Exception e) {
 			log.error("connect to rpc server /{}:{}, error ", host, port, e);
 		}

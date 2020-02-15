@@ -16,12 +16,13 @@
         <java.version>1.8</java.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
-		<project.version>0.0.2-SNAPSHOT</project.version>
+		<project.version>0.0.3-SNAPSHOT</project.version>
 	</properties>
 	<modules>
 		<module>rpc-stub-demo</module>
 		<module>rpc-server-demo</module>
 		<module>rpc-client-demo</module>
+		<module>webapp-client-demo</module>
 	</modules>
 
 	<dependencyManagement>

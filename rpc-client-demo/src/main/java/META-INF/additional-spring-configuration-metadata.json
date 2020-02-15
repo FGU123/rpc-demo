@@ -8,5 +8,15 @@
     "name": "rpc.server.port",
     "type": "java.lang.String",
     "description": "A description for 'rpc.server.port'"
+  },
+  {
+    "name": "rpc.client.channel.pool.size",
+    "type": "java.lang.Integer",
+    "description": "A description for 'rpc.client.channel.pool.size'"
+  },
+  {
+    "name": "rpc.client.request.timeout",
+    "type": "java.lang.Integer",
+    "description": "A description for 'rpc.client.request.timeout'"
   }
 ]}

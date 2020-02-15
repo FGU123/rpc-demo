@@ -1,18 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<artifactId>rpc-server-demo</artifactId>
-	<name>rpc-server-demo</name>
-	<description>RPC Server Demo Project</description>
+	<artifactId>web-client-demo</artifactId>
+	<name>webapp-client-demo</name>
+	<description>Web Client Demo Project</description>
 
 	<parent>
 		<groupId>com.ex</groupId>
 		<artifactId>rpc-demo</artifactId>
 		<version>${project.version}</version>
 	</parent>
-
+	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <encoding>UTF-8</encoding>
@@ -26,25 +25,30 @@
 			<dependency>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-dependencies</artifactId>
-				<version>2.2.0.RELEASE</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
+			  	<version>2.2.0.RELEASE</version>
+			  	<type>pom</type>
+			  	<scope>import</scope>
+			</dependency>	
 		</dependencies>
 	</dependencyManagement>
 
 	<dependencies>
 		<dependency>
 			<groupId>com.ex</groupId>
-			<artifactId>rpc-stub-demo</artifactId>
+			<artifactId>rpc-client-demo</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter</artifactId>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
+		</dependency>
+		
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -61,7 +65,11 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-
+		
+		<dependency>
+		    <groupId>io.netty</groupId>
+		    <artifactId>netty-all</artifactId>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
@@ -75,7 +83,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
 					<!-- 指定该Main Class为全局的唯一入口 -->
-					<mainClass>com.example.demo.ServerBootWithSpring</mainClass>
+					<mainClass>com.ex.demo.ApplicationBoot</mainClass>
 					<layout>ZIP</layout>
 				</configuration>
 				<executions>

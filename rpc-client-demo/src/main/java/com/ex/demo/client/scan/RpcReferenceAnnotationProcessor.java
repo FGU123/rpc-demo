@@ -21,7 +21,7 @@ import com.ex.demo.client.proxy.SeviceConsumerProxy;
 
 /**
  * 
- * find classes with RpcReference Annotation 
+ * to find classes with RpcReference Annotation 
  * and then inject into a field where this rpcReferenced class is being dependent on
  *
  */

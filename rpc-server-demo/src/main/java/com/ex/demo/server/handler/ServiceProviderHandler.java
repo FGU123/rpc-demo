@@ -1,24 +1,26 @@
 package com.ex.demo.server.handler;
 
+import cn.hutool.core.date.StopWatch;
+import cn.hutool.core.map.MapUtil;
+import com.ex.demo.remoting.RpcRequest;
+import com.ex.demo.remoting.RpcResponse;
+import com.ex.demo.server.global.Environment;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundHandlerAdapter;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cglib.reflect.FastClass;
+import org.springframework.cglib.reflect.FastMethod;
+
 import java.lang.reflect.InvocationTargetException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-
-import org.springframework.cglib.reflect.FastClass;
-import org.springframework.cglib.reflect.FastMethod;
-
-import com.ex.demo.remoting.RpcRequest;
-import com.ex.demo.remoting.RpcResponse;
-
-import cn.hutool.core.map.MapUtil;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
-import lombok.extern.slf4j.Slf4j;
+import java.util.concurrent.TimeoutException;
 
 /**
  * A service-provider that handles receiving msg from client and 
@@ -29,9 +31,9 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 	private static final Map<String, Object> SERVICE_BEANS = new HashMap<String, Object>();
 
-	private ExecutorService es = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+	private ExecutorService execService = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
 	
-	private CompletionService<Object> completionService = new ExecutorCompletionService<Object>(es);
+	private CompletionService<RpcResponse> completionService = new ExecutorCompletionService<RpcResponse>(execService);
 	
 	/**
 	 * if need to boot service provider without spring context, 
@@ -56,26 +58,28 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
      * besides write back handle result if needed.
      */
 	@Override
-	public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+	public void channelRead(ChannelHandlerContext ctx, Object msg) {
 		log.info("{}, receive msg from client: {}", this, msg);
 
 		RpcRequest request = (RpcRequest) msg;
-		log.info("{} handle {} start", Thread.currentThread(), request.getRequestId());
-		long start = System.currentTimeMillis();
-//		Object result = handle(request);
-		Object result = completionService.submit(()->handle(request)).get();
-		log.info("{} handle {} end, consumes {}ms", Thread.currentThread(), request.getRequestId(), (System.currentTimeMillis()-start));
-
-		RpcResponse response = new RpcResponse();
-		response.setRequestId(request.getRequestId());
-		response.setResult(result);
-		response.setResponseId(UUID.randomUUID().toString());
+		log.info("handle request [id={}] start", request.getRequestId());
+		StopWatch stopWatch = new StopWatch();
+		stopWatch.start();
+//		RpcResponse result = handle(request);
+		RpcResponse response = RpcResponse.builder().requestId(request.getRequestId()).responseId(UUID.randomUUID().toString()).build();
+		try {
+			response = completionService.submit(()->handle(request)).get(Environment.getServiceProcessTimeout(), Environment.getServiceProcessTimeunit());
+		} catch (InterruptedException | ExecutionException | TimeoutException e) {
+			log.error("process request [id={}] error ", request.getRequestId(), e);
+		}
+		stopWatch.stop();
+		log.info("process request [id={}] end, consumes {}ms", request.getRequestId(), stopWatch.getTotalTimeMillis());
 
 		ctx.writeAndFlush(response);
 		log.info("send msg back to client: {}", response);
 	}
 
-	public Object handle(RpcRequest request) {
+	public RpcResponse handle(RpcRequest request) {
 		String className = request.getClassName();
 		Object object = SERVICE_BEANS.get(className);
 		Class<?>[] parameterTypes = request.getParameterTypes();
@@ -86,13 +90,20 @@ public class ServiceProviderHandler extends ChannelInboundHandlerAdapter {
 
 		FastClass fastClass = FastClass.create(targetClass);
 		FastMethod method = fastClass.getMethod(methodName, parameterTypes);
-		Object invoke = null;
+		Object result = null;
 		try {
-			invoke = method.invoke(object, args);
+			result = method.invoke(object, args);
 		} catch (InvocationTargetException e) {
 			log.error("invoke servie method error ", e);
 		}
-		return invoke;
+		
+		RpcResponse response = new RpcResponse();
+		response.setRequestId(request.getRequestId());
+		response.setResponseId(UUID.randomUUID().toString());
+		response.setReturnType(method.getReturnType());
+		response.setResult(result);
+		
+		return response;
 	}
 	
 }
